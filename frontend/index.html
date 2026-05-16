@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EcoGrid — Smart Waste Management</title>
+
+  <!-- Fonts: Syne (display) + DM Sans (body) -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    <span class="logo-icon">⬡</span>
+    <div>
+      <div class="logo-name">EcoGrid</div>
+      <div class="logo-sub">Waste Management OS</div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item active" data-section="dashboard">
+      <span class="nav-icon">◈</span> Dashboard
+    </a>
+    <a href="#" class="nav-item" data-section="bins">
+      <span class="nav-icon">⬢</span> Bin Monitor
+    </a>
+    <a href="#" class="nav-item" data-section="trucks">
+      <span class="nav-icon">◉</span> Fleet Status
+    </a>
+    <a href="#" class="nav-item" data-section="complaints">
+      <span class="nav-icon">◎</span> Complaints
+    </a>
+    <a href="#" class="nav-item" data-section="history">
+      <span class="nav-icon">▤</span> History
+    </a>
+    <a href="#" class="nav-item" data-section="analytics">
+      <span class="nav-icon">◍</span> Analytics
+    </a>
+  </nav>
+
+  <!-- System Status indicator -->
+  <div class="sidebar-status">
+    <span class="pulse-dot"></span>
+    <span>All Systems Operational</span>
+  </div>
+
+</aside>
+
+<!-- ═══════════════════════════════════════════ MAIN -->
+<main class="main">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div>
+        <h1 class="page-title" id="pageTitle">Dashboard</h1>
+        <p class="page-sub">Bengaluru Municipal Corporation · Live Feed</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="live-badge">
+        <span class="live-dot"></span> LIVE
+      </div>
+      <div class="time-display" id="timeDisplay">--:--:--</div>
+      <button class="refresh-btn" onclick="refreshAll()">↻ Refresh</button>
+    </div>
+  </header>
+
+  <!-- ─── SECTION: DASHBOARD ─── -->
+  <section class="section active" id="sec-dashboard">
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-teal">
+        <div class="kpi-label">Total Bins</div>
+        <div class="kpi-value" id="kTotalBins">—</div>
+        <div class="kpi-desc">Monitored across city</div>
+        <div class="kpi-icon">⬢</div>
+      </div>
+      <div class="kpi-card kpi-red">
+        <div class="kpi-label">Critical Bins</div>
+        <div class="kpi-value" id="kCritical">—</div>
+        <div class="kpi-desc">Fill level &gt; 80%</div>
+        <div class="kpi-icon">⚠</div>
+      </div>
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-label">Pending Complaints</div>
+        <div class="kpi-value" id="kPending">—</div>
+        <div class="kpi-desc">Awaiting resolution</div>
+        <div class="kpi-icon">◎</div>
+      </div>
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-label">Active Trucks</div>
+        <div class="kpi-value" id="kTrucks">—</div>
+        <div class="kpi-desc">On route / collecting</div>
+        <div class="kpi-icon">◉</div>
+      </div>
+      <div class="kpi-card kpi-green">
+        <div class="kpi-label">Avg. Fill Level</div>
+        <div class="kpi-value" id="kAvgFill">—</div>
+        <div class="kpi-desc">City-wide average</div>
+        <div class="kpi-icon">◍</div>
+      </div>
+      <div class="kpi-card kpi-purple">
+        <div class="kpi-label">Total Complaints</div>
+        <div class="kpi-value" id="kTotalComp">—</div>
+        <div class="kpi-desc">All time submitted</div>
+        <div class="kpi-icon">▤</div>
+      </div>
+    </div>
+
+    <!-- Quick Charts Row -->
+    <div class="charts-row">
+      <div class="chart-card chart-wide">
+        <div class="chart-header">
+          <h3>Weekly Waste Collection</h3>
+          <span class="chart-tag">tons / day</span>
+        </div>
+        <canvas id="lineChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Bin Fill Distribution</h3>
+          <span class="chart-tag">by status</span>
+        </div>
+        <canvas id="donutChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Area Bar Chart -->
+    <div class="chart-card full-width">
+      <div class="chart-header">
+        <h3>Average Fill Level by Area</h3>
+        <span class="chart-tag">%</span>
+      </div>
+      <canvas id="barChart"></canvas>
+    </div>
+
+  </section>
+
+  <!-- ─── SECTION: BIN MONITOR ─── -->
+  <section class="section" id="sec-bins">
+    <div class="section-header">
+      <h2>Smart Bin Monitoring</h2>
+      <div class="filter-group">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="Normal">Normal</button>
+        <button class="filter-btn" data-filter="Moderate">Moderate</button>
+        <button class="filter-btn" data-filter="Critical">Critical</button>
+        <button class="filter-btn" data-filter="Overflow">Overflow</button>
+      </div>
+    </div>
+    <div class="bin-grid" id="binGrid">
+      <!-- Populated by JS -->
+    </div>
+  </section>
+
+  <!-- ─── SECTION: FLEET STATUS ─── -->
+  <section class="section" id="sec-trucks">
+    <div class="section-header">
+      <h2>Fleet Status</h2>
+      <span class="section-badge" id="truckCount">0 vehicles</span>
+    </div>
+    <div class="truck-grid" id="truckGrid">
+      <!-- Populated by JS -->
+    </div>
+  </section>
+
+  <!-- ─── SECTION: SUBMIT COMPLAINT ─── -->
+  <section class="section" id="sec-complaints">
+    <div class="two-col">
+
+      <!-- Form -->
+      <div class="form-card">
+        <h2>Raise a Complaint</h2>
+        <p class="form-sub">Report issues and we'll route it to the right team.</p>
+
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" id="cName" placeholder="e.g. Priya Sharma" />
+        </div>
+        <div class="form-group">
+          <label>Location / Area</label>
+          <input type="text" id="cLocation" placeholder="e.g. Koramangala 5th Block" />
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="cCategory">
+            <option value="Overflow">Bin Overflow</option>
+            <option value="Missed Pickup">Missed Pickup</option>
+            <option value="Damage">Bin Damage</option>
+            <option value="Odour">Foul Odour</option>
+            <option value="Segregation">Waste Segregation</option>
+            <option value="Schedule">Schedule Issue</option>
+            <option value="General">General</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="cDesc" placeholder="Describe the issue in detail..."></textarea>
+        </div>
+        <button class="submit-btn" id="submitBtn" onclick="submitComplaint()">
+          Submit Complaint
+        </button>
+        <div class="form-msg" id="formMsg"></div>
+      </div>
+
+      <!-- Tips panel -->
+      <div class="tips-card">
+        <h3>📋 Reporting Guidelines</h3>
+        <ul class="tips-list">
+          <li><strong>Be specific</strong> — include the exact street or landmark.</li>
+          <li><strong>Choose the right category</strong> so it reaches the correct team faster.</li>
+          <li><strong>Track your complaint</strong> in the History tab after submission.</li>
+          <li><strong>Overflow issues</strong> are treated as Priority 1 and addressed within 24 hours.</li>
+          <li><strong>Damage reports</strong> are escalated to the bin maintenance unit.</li>
+        </ul>
+
+        <div class="response-times">
+          <h4>Expected Response Times</h4>
+          <div class="rt-row"><span class="rt-dot rt-red"></span>Overflow <span class="rt-time">4–8 hrs</span></div>
+          <div class="rt-row"><span class="rt-dot rt-amber"></span>Missed Pickup <span class="rt-time">12–24 hrs</span></div>
+          <div class="rt-row"><span class="rt-dot rt-blue"></span>Damage / Other <span class="rt-time">24–48 hrs</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── SECTION: COMPLAINT HISTORY ─── -->
+  <section class="section" id="sec-history">
+    <div class="section-header">
+      <h2>Complaint History</h2>
+      <div class="filter-group">
+        <button class="hist-filter active" data-hfilter="all">All</button>
+        <button class="hist-filter" data-hfilter="Pending">Pending</button>
+        <button class="hist-filter" data-hfilter="In Progress">In Progress</button>
+        <button class="hist-filter" data-hfilter="Resolved">Resolved</button>
+      </div>
+    </div>
+    <div class="complaint-list" id="complaintList">
+      <!-- Populated by JS -->
+    </div>
+  </section>
+
+  <!-- ─── SECTION: ANALYTICS ─── -->
+  <section class="section" id="sec-analytics">
+    <div class="analytics-grid">
+
+      <div class="chart-card full-width">
+        <div class="chart-header">
+          <h3>7-Day Collection Trend</h3>
+          <span class="chart-tag">tons collected per day</span>
+        </div>
+        <canvas id="analyticsLine"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Complaints by Category</h3>
+        </div>
+        <canvas id="categoryChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Complaint Resolution Rate</h3>
+        </div>
+        <canvas id="resolutionChart"></canvas>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>

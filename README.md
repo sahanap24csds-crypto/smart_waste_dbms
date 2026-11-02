@@ -12,7 +12,7 @@ Traditional waste management processes often face challenges such as inefficient
 
 These challenges make waste management operations harder to organize and manage effectively.
 
-## 💡 Our Solution
+## 💡 Solution
 
 EcoGrid provides a database-driven platform that brings waste management information into an organized system.
 
